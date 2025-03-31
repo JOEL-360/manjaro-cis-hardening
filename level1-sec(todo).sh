@@ -57,34 +57,48 @@ systemctl disable httpd
 #systemctl disable snmpd
 
 # 3.1 Network Parameters
-echo "Configuring network parameters..."
+echo "Configuring network, kernel and others parameters..."
 
-cat > /etc/sysctl.d/99-cis.conf << EOF
-# 3.1.1 Disable IPv6
-#net.ipv6.conf.all.disable_ipv6 = 1
-#net.ipv6.conf.default.disable_ipv6 = 1
-
-# 3.2 Network Parameters (Host Only)
-net.ipv4.conf.all.send_redirects = 0
+cat > /etc/sysctl.d/1-cis.conf << EOF
+net.ipv6.conf.default.accept_redirects = 0
+net.ipv6.conf.default.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv4.conf.default.secure_redirects = 0
+net.ipv4.conf.default.log_martians = 1
+net.ipv4.conf.default.rp_filter = 1
+net.ipv4.conf.default.secure_redirects = 0
 net.ipv4.conf.default.send_redirects = 0
 
-# 3.3 Network Parameters (Host and Router)
-net.ipv4.conf.all.accept_source_route = 0
-net.ipv4.conf.default.accept_source_route = 0
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.all.accept_ra = 0
+net.ipv6.conf.all.forwarding = 0
 net.ipv4.conf.all.accept_redirects = 0
-net.ipv4.conf.default.accept_redirects = 0
-net.ipv4.conf.all.secure_redirects = 0
-net.ipv4.conf.default.secure_redirects = 0
+net.ipv4.conf.all.accept_source_route = 0
 net.ipv4.conf.all.log_martians = 1
-net.ipv4.conf.default.log_martians = 1
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.all.secure_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+
 net.ipv4.icmp_echo_ignore_broadcasts = 1
 net.ipv4.icmp_ignore_bogus_error_responses = 1
-net.ipv4.conf.all.rp_filter = 1
-net.ipv4.conf.default.rp_filter = 1
 net.ipv4.tcp_syncookies = 1
+net.ipv4.ip_forward = 0
+
+kernel.yama.ptrace_scope = 1
+kernel.randomize_va_space = 2
+kernel.core_uses_pid = 1
+kernel.ctrl-alt-del = 0
+kernel.dmesg_restrict = 1
+
+fs.suid_dumpable = 0
+fs.protected_hardlinks = 1
+fs.protected_regular = 2
+fs.protected_symlinks = 1
+fs.suid_dumpable = 0
+
 EOF
 
-sysctl -p /etc/sysctl.d/99-cis.conf
+sysctl -p /etc/sysctl.d/1-cis.conf
 
 # 4.1 Configure UFW
 echo "Configuring firewall..."
@@ -129,7 +143,7 @@ chmod 600 /etc/cron.monthly
 
 #systemctl restart sshd
 
-# 5.3 Configure PAM and password settings
+# 5.3 Configure PAM and password settings (optional)
 echo "Configuring PAM and password policies..."
 
 # Install PAM modules
