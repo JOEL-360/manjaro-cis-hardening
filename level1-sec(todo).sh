@@ -16,22 +16,22 @@ echo "Configuring filesystem security..."
 
 # 1.1.1 Disable unused filesystems
 cat > /etc/modprobe.d/cis.conf << EOF
-install cramfs /bin/true
-install freevxfs /bin/true
-install jffs2 /bin/true
+#install cramfs /bin/true
+#install freevxfs /bin/true
+#install jffs2 /bin/true
 install hfs /bin/true
 install hfsplus /bin/true
-install squashfs /bin/true
-install udf /bin/true
+#install squashfs /bin/true
+#install udf /bin/true
 #install vfat /bin/true
 EOF
 
 # 1.1.2 Configure /tmp
-systemctl enable tmp.mount
-sed -i 's/^Options=.*/Options=mode=1777,strictatime,noexec,nodev,nosuid/' /etc/systemd/system/tmp.mount
+#systemctl enable tmp.mount
+#sed -i 's/^Options=.*/Options=mode=1777,strictatime,noexec,nodev,nosuid/' /etc/systemd/system/tmp.mount
 
 # 1.1.3 Configure /dev/shm
-echo "tmpfs /dev/shm tmpfs defaults,nodev,nosuid,noexec 0 0" >> /etc/fstab
+#echo "tmpfs /dev/shm tmpfs defaults,nodev,nosuid,noexec 0 0" >> /etc/fstab
 
 # 2.1 Services
 echo "Configuring services..."
@@ -42,56 +42,56 @@ systemctl enable ntpd
 systemctl start ntpd
 
 # 2.2 Special Purpose Services
-systemctl disable avahi-daemon
-systemctl disable cups
+#systemctl disable avahi-daemon
+#systemctl disable cups
 systemctl disable dhcpd
 systemctl disable slapd
 systemctl disable nfs-server
 systemctl disable rpcbind
 systemctl disable named
-systemctl disable vsftpd
+#systemctl disable vsftpd
 systemctl disable httpd
-systemctl disable dovecot
-systemctl disable smb
-systemctl disable squid
-systemctl disable snmpd
+#systemctl disable dovecot
+#systemctl disable smb
+#systemctl disable squid
+#systemctl disable snmpd
 
 # 3.1 Network Parameters
-#echo "Configuring network parameters..."
+echo "Configuring network parameters..."
 
-#cat > /etc/sysctl.d/99-cis.conf << EOF
+cat > /etc/sysctl.d/99-cis.conf << EOF
 # 3.1.1 Disable IPv6
 #net.ipv6.conf.all.disable_ipv6 = 1
 #net.ipv6.conf.default.disable_ipv6 = 1
 
 # 3.2 Network Parameters (Host Only)
-#net.ipv4.conf.all.send_redirects = 0
-#net.ipv4.conf.default.send_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
 
 # 3.3 Network Parameters (Host and Router)
-#net.ipv4.conf.all.accept_source_route = 0
-#net.ipv4.conf.default.accept_source_route = 0
-#net.ipv4.conf.all.accept_redirects = 0
-#net.ipv4.conf.default.accept_redirects = 0
-#net.ipv4.conf.all.secure_redirects = 0
-#net.ipv4.conf.default.secure_redirects = 0
-#net.ipv4.conf.all.log_martians = 1
-#net.ipv4.conf.default.log_martians = 1
-#net.ipv4.icmp_echo_ignore_broadcasts = 1
-#net.ipv4.icmp_ignore_bogus_error_responses = 1
-#net.ipv4.conf.all.rp_filter = 1
-#net.ipv4.conf.default.rp_filter = 1
-#net.ipv4.tcp_syncookies = 1
-#EOF
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.all.secure_redirects = 0
+net.ipv4.conf.default.secure_redirects = 0
+net.ipv4.conf.all.log_martians = 1
+net.ipv4.conf.default.log_martians = 1
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+net.ipv4.tcp_syncookies = 1
+EOF
 
-#sysctl -p /etc/sysctl.d/99-cis.conf
+sysctl -p /etc/sysctl.d/99-cis.conf
 
 # 4.1 Configure UFW
-#echo "Configuring firewall..."
-#pacman -S --noconfirm ufw
-#ufw default deny incoming
-#ufw default allow outgoing
-#ufw enable
+echo "Configuring firewall..."
+pacman -S --noconfirm ufw
+ufw default deny incoming
+ufw default allow outgoing
+ufw enable
 
 # 5.1 Configure time-based job schedulers
 echo "Configuring cron and at..."
@@ -158,21 +158,21 @@ echo "umask 027" >> /etc/profile
 echo "umask 027" >> /etc/bash.bashrc
 
 # Set TMOUT for automatic logout
-echo "TMOUT=600" >> /etc/profile
-echo "readonly TMOUT" >> /etc/profile
-echo "export TMOUT" >> /etc/profile
+#echo "TMOUT=600" >> /etc/profile
+#echo "readonly TMOUT" >> /etc/profile
+#echo "export TMOUT" >> /etc/profile
 
 # 6.1 System File Permissions
 echo "Setting secure file permissions..."
 
 chmod 644 /etc/passwd
-chmod 000 /etc/shadow
+chmod 600 /etc/shadow
 chmod 644 /etc/group
-chmod 000 /etc/gshadow
+chmod 600 /etc/gshadow
 chmod 644 /etc/passwd-
-chmod 000 /etc/shadow-
+chmod 600 /etc/shadow-
 chmod 644 /etc/group-
-chmod 000 /etc/gshadow-
+chmod 600 /etc/gshadow-
 
 # 6.2 User and Group Settings
 echo "Configuring user and group settings..."
@@ -184,18 +184,18 @@ chown root:root /etc/group
 chown root:root /etc/gshadow
 
 # 6.3 Warning Banners
-echo "Configuring warning banners..."
+#echo "Configuring warning banners..."
 
-cat > /etc/issue << EOF
-Authorized uses only. All activity may be monitored and reported.
-EOF
+#cat > /etc/issue << EOF
+#Authorized uses only. All activity may be monitored and reported.
+#EOF
 
-cat > /etc/issue.net << EOF
-Authorized uses only. All activity may be monitored and reported.
-EOF
+#cat > /etc/issue.net << EOF
+#Authorized uses only. All activity may be monitored and reported.
+#EOF
 
-chmod 644 /etc/issue
-chmod 644 /etc/issue.net
+#chmod 644 /etc/issue
+#chmod 644 /etc/issue.net
 
 # 7.1 Install AIDE
 echo "Installing and configuring AIDE..."
