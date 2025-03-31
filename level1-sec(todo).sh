@@ -9,12 +9,19 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+
+# System update and upgrade 
+echo "Updating system..."
+pacman -Syu --noconfirm
+
+
 echo "Starting CIS Level 1 hardening process..."
 
-# 1.1 Filesystem Configuration
+
+# Filesystem Configuration
 echo "Configuring filesystem security..."
 
-# 1.1.1 Disable unused filesystems
+# Disable unused filesystems
 cat > /etc/modprobe.d/cis.conf << EOF
 #install cramfs /bin/true
 #install freevxfs /bin/true
@@ -26,22 +33,23 @@ install hfsplus /bin/true
 #install vfat /bin/true
 EOF
 
-# 1.1.2 Configure /tmp
+# Configure /tmp (optional)
 #systemctl enable tmp.mount
 #sed -i 's/^Options=.*/Options=mode=1777,strictatime,noexec,nodev,nosuid/' /etc/systemd/system/tmp.mount
 
-# 1.1.3 Configure /dev/shm
+# Configure /dev/shm (optional)
 #echo "tmpfs /dev/shm tmpfs defaults,nodev,nosuid,noexec 0 0" >> /etc/fstab
 
-# 2.1 Services
+
+# Services
 echo "Configuring services..."
 
-# 2.1.1 Time Synchronization
+# Time Synchronization
 pacman -S --noconfirm ntp
 systemctl enable ntpd
 systemctl start ntpd
 
-# 2.2 Special Purpose Services
+# Special Purpose Services
 #systemctl disable avahi-daemon
 #systemctl disable cups
 systemctl disable dhcpd
@@ -56,7 +64,8 @@ systemctl disable httpd
 #systemctl disable squid
 #systemctl disable snmpd
 
-# 3.1 Network Parameters
+
+# Network, kernel and others Parameters
 echo "Configuring network, kernel and others parameters..."
 
 cat > /etc/sysctl.d/1-cis.conf << EOF
@@ -100,14 +109,28 @@ EOF
 
 sysctl -p /etc/sysctl.d/1-cis.conf
 
-# 4.1 Configure UFW
+
+# Configure UFW
 echo "Configuring firewall..."
 pacman -S --noconfirm ufw
 ufw default deny incoming
 ufw default allow outgoing
 ufw enable
 
-# 5.1 Configure time-based job schedulers
+# Configure ClamAV (optional)
+echo "Configuring antivirus..."
+pacman -S --noconfirm clamav
+systemctl enable clamav-daemon
+systemctl start clamav-daemon
+freshclam
+
+#GUI (optional)
+#echo "intalling GUI for the antivirus and firewall..."
+#pacman -S --noconfirm clamtk
+#pacman -S --noconfirm gufw
+
+
+# Configure time-based job schedulers
 echo "Configuring cron and at..."
 systemctl enable cronie
 systemctl start cronie
@@ -118,7 +141,8 @@ chmod 600 /etc/cron.daily
 chmod 600 /etc/cron.weekly
 chmod 600 /etc/cron.monthly
 
-# 5.2 SSH Server Configuration
+
+# SSH Server Configuration (optional)
 #echo "Configuring SSH..."
 #cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
 
@@ -143,10 +167,10 @@ chmod 600 /etc/cron.monthly
 
 #systemctl restart sshd
 
-# 5.3 Configure PAM and password settings (optional)
+
+# Configure PAM and password settings (optional)
 echo "Configuring PAM and password policies..."
 
-# Install PAM modules
 pacman -S --noconfirm pam pam_pwquality cracklib
 
 # Configure password quality requirements
@@ -164,19 +188,20 @@ usercheck = 1
 enforcing = 1
 EOF
 
-# 5.4 User Accounts and Environment
+
+# User Accounts and Environment
 echo "Configuring user accounts and environment..."
 
 # Set default umask
 echo "umask 027" >> /etc/profile
 echo "umask 027" >> /etc/bash.bashrc
 
-# Set TMOUT for automatic logout
+# Set TMOUT for automatic logout (optional)
 #echo "TMOUT=600" >> /etc/profile
 #echo "readonly TMOUT" >> /etc/profile
 #echo "export TMOUT" >> /etc/profile
 
-# 6.1 System File Permissions
+# System File Permissions
 echo "Setting secure file permissions..."
 
 chmod 644 /etc/passwd
@@ -189,7 +214,7 @@ chmod 644 /etc/group-
 chmod 600 /etc/gshadow-
 chmod 640 /etc/sudoers.d
 
-# 6.2 User and Group Settings
+# User and Group Settings
 echo "Configuring user and group settings..."
 
 # Set root group owner and permissions
@@ -199,7 +224,7 @@ chown root:root /etc/group
 chown root:root /etc/gshadow
 chown root:root /etc/sudoers.d
 
-# 6.3 Warning Banners
+# Warning Banners (optional)
 #echo "Configuring warning banners..."
 
 #cat > /etc/issue << EOF
@@ -213,7 +238,8 @@ chown root:root /etc/sudoers.d
 #chmod 644 /etc/issue
 #chmod 644 /etc/issue.net
 
-# 7.1 Install AIDE
+
+# Install AIDE
 echo "Installing and configuring AIDE..."
 pacman -S --noconfirm aide
 aide --init
@@ -227,7 +253,7 @@ EOF
 
 chmod 755 /etc/cron.daily/aide-check
 
-# 7.2 Configure System Accounting with auditd
+# Configure System Accounting with auditd
 echo "Configuring system auditing..."
 pacman -S --noconfirm audit
 
@@ -250,11 +276,13 @@ EOF
 systemctl enable auditd
 systemctl start auditd
 
-# 8.1 fail2ban
+
+# Configure fail2ban
+echo "Configuring fail2ban..."
 pacman -S --noconfirm fail2ban
 cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
 
-cat <<EOL | tee -a /etc/fail2ban/jail.local
+cat > /etc/fail2ban/jail.local << EOF
 [sshd]
 enabled = true
 port = ssh
@@ -262,10 +290,16 @@ filter = sshd
 logpath = /var/log/auth.log
 maxretry = 5
 bantime = 600
-EOL
+EOF
 
 sudo systemctl enable fail2ban
 sudo systemctl start fail2ban
+
+
+# Install Lynis 
+echo "Installing lynis..."
+pacman -S --noconfirm lynis
+
 
 # Final steps
 echo "Performing final steps..."
@@ -273,9 +307,16 @@ echo "Performing final steps..."
 # Update all packages
 pacman -Syu --noconfirm
 
+
+# Audit system with lynis
+echo "Audit system with lynis..."
+lynis audit system 
+
+
 echo "CIS Level 1 hardening completed. Please:"
 echo "1. Update SSH configuration with your actual username"
 echo "2. Review all configurations and adjust as needed"
 echo "3. Reboot the system to apply all changes"
 echo "4. Run 'aide --check' after reboot to establish baseline"
-echo "5. Consider implementing additional CIS Level 2 controls if needed"
+echo "5. Run 'sudo lynis audit system' after reboot"
+echo "6. Read attentively"
