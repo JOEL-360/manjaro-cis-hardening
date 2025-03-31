@@ -187,6 +187,7 @@ chmod 644 /etc/passwd-
 chmod 600 /etc/shadow-
 chmod 644 /etc/group-
 chmod 600 /etc/gshadow-
+chmod 640 /etc/sudoers.d
 
 # 6.2 User and Group Settings
 echo "Configuring user and group settings..."
@@ -196,6 +197,7 @@ chown root:root /etc/passwd
 chown root:root /etc/shadow
 chown root:root /etc/group
 chown root:root /etc/gshadow
+chown root:root /etc/sudoers.d
 
 # 6.3 Warning Banners
 #echo "Configuring warning banners..."
@@ -247,6 +249,23 @@ EOF
 
 systemctl enable auditd
 systemctl start auditd
+
+# 8.1 fail2ban
+pacman -S --noconfirm fail2ban
+cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+
+cat <<EOL | tee -a /etc/fail2ban/jail.local
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = 5
+bantime = 600
+EOL
+
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
 
 # Final steps
 echo "Performing final steps..."
