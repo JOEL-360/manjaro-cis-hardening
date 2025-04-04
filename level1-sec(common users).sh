@@ -22,16 +22,16 @@ echo "Starting CIS Level 1 hardening process..."
 echo "Configuring filesystem security..."
 
 # Disable unused filesystems
-cat > /etc/modprobe.d/cis.conf << EOF
+#cat > /etc/modprobe.d/cis.conf << EOF
 #install cramfs /bin/true
 #install freevxfs /bin/true
 #install jffs2 /bin/true
-install hfs /bin/true
-install hfsplus /bin/true
+#install hfs /bin/true
+#install hfsplus /bin/true
 #install squashfs /bin/true
 #install udf /bin/true
 #install vfat /bin/true
-EOF
+#EOF
 
 # Configure /tmp (optional)
 #systemctl enable tmp.mount
@@ -52,13 +52,13 @@ systemctl start ntpd
 # Special Purpose Services
 #systemctl disable avahi-daemon
 #systemctl disable cups
-systemctl disable dhcpd
-systemctl disable slapd
-systemctl disable nfs-server
-systemctl disable rpcbind
-systemctl disable named
+#systemctl disable dhcpd
+#systemctl disable slapd
+#systemctl disable nfs-server
+#systemctl disable rpcbind
+#systemctl disable named
 #systemctl disable vsftpd
-systemctl disable httpd
+#systemctl disable httpd
 #systemctl disable dovecot
 #systemctl disable smb
 #systemctl disable squid
@@ -93,7 +93,7 @@ net.ipv4.icmp_ignore_bogus_error_responses = 1
 net.ipv4.tcp_syncookies = 1
 net.ipv4.ip_forward = 0
 
-kernel.yama.ptrace_scope = 1
+#kernel.yama.ptrace_scope = 1
 kernel.randomize_va_space = 2
 kernel.core_uses_pid = 1
 kernel.ctrl-alt-del = 0
@@ -125,9 +125,9 @@ systemctl start clamav-daemon
 freshclam
 
 #GUI (optional)
-#echo "intalling GUI for the antivirus and firewall..."
-#pacman -S --noconfirm clamtk
-#pacman -S --noconfirm gufw
+echo "intalling GUI for the antivirus and firewall..."
+pacman -S --noconfirm clamtk
+pacman -S --noconfirm gufw
 
 
 # Configure time-based job schedulers
@@ -135,11 +135,11 @@ echo "Configuring cron and at..."
 systemctl enable cronie
 systemctl start cronie
 
-chmod 600 /etc/crontab
-chmod 600 /etc/cron.hourly
-chmod 600 /etc/cron.daily
-chmod 600 /etc/cron.weekly
-chmod 600 /etc/cron.monthly
+#chmod 600 /etc/crontab
+#chmod 600 /etc/cron.hourly
+#chmod 600 /etc/cron.daily
+#chmod 600 /etc/cron.weekly
+#chmod 600 /etc/cron.monthly
 
 
 # SSH Server Configuration (optional)
@@ -169,24 +169,24 @@ chmod 600 /etc/cron.monthly
 
 
 # Configure PAM and password settings (optional)
-echo "Configuring PAM and password policies..."
+#echo "Configuring PAM and password policies..."
 
-pacman -S --noconfirm pam pam_pwquality cracklib
+#pacman -S --noconfirm pam pam_pwquality cracklib
 
 # Configure password quality requirements
-cat > /etc/security/pwquality.conf << EOF
-minlen = 14
-dcredit = -1
-ucredit = -1
-ocredit = -1
-lcredit = -1
-minclass = 4
-maxrepeat = 3
-gecoscheck = 1
-dictcheck = 1
-usercheck = 1
-enforcing = 1
-EOF
+#cat > /etc/security/pwquality.conf << EOF
+#minlen = 14
+#dcredit = -1
+#ucredit = -1
+#ocredit = -1
+#lcredit = -1
+#minclass = 4
+#maxrepeat = 3
+#gecoscheck = 1
+#dictcheck = 1
+#usercheck = 1
+#enforcing = 1
+#EOF
 
 
 # User Accounts and Environment
@@ -243,57 +243,57 @@ chown root:root /etc/sudoers.d
 echo "Installing and configuring AIDE..."
 pacman -S --noconfirm aide
 aide --init
-mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db
+#mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db
 
 # Create daily AIDE check
-cat > /etc/cron.daily/aide-check << EOF
-#!/bin/bash
-/usr/bin/aide --check
-EOF
+#cat > /etc/cron.daily/aide-check << EOF
+##!/bin/bash
+#/usr/bin/aide --check
+#EOF
 
-chmod 755 /etc/cron.daily/aide-check
+#chmod 755 /etc/cron.daily/aide-check
 
 # Configure System Accounting with auditd
 echo "Configuring system auditing..."
 pacman -S --noconfirm audit
 
-cat > /etc/audit/rules.d/cis.rules << EOF
+#cat > /etc/audit/rules.d/cis.rules << EOF
 # 7.2.1 Configure Data Retention
--w /etc/sudoers -p wa -k scope
--w /etc/sudoers.d/ -p wa -k scope
--w /var/log/lastlog -p wa -k logins
--w /var/run/faillock/ -p wa -k logins
--w /var/log/tallylog -p wa -k logins
--w /etc/passwd -p wa -k identity
--w /etc/gshadow -p wa -k identity
--w /etc/shadow -p wa -k identity
--w /etc/security/opasswd -p wa -k identity
--a always,exit -F arch=b64 -S adjtimex -S settimeofday -k time-change
--a always,exit -F arch=b64 -S clock_settime -k time-change
--w /etc/localtime -p wa -k time-change
-EOF
+#-w /etc/sudoers -p wa -k scope
+#-w /etc/sudoers.d/ -p wa -k scope
+#-w /var/log/lastlog -p wa -k logins
+#-w /var/run/faillock/ -p wa -k logins
+#-w /var/log/tallylog -p wa -k logins
+#-w /etc/passwd -p wa -k identity
+#-w /etc/gshadow -p wa -k identity
+#-w /etc/shadow -p wa -k identity
+#-w /etc/security/opasswd -p wa -k identity
+#-a always,exit -F arch=b64 -S adjtimex -S settimeofday -k time-change
+#-a always,exit -F arch=b64 -S clock_settime -k time-change
+#-w /etc/localtime -p wa -k time-change
+#EOF
 
-systemctl enable auditd
-systemctl start auditd
+#systemctl enable auditd
+#systemctl start auditd
 
 
 # Configure fail2ban
 echo "Configuring fail2ban..."
 pacman -S --noconfirm fail2ban
-cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+#cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
 
-cat > /etc/fail2ban/jail.local << EOF
-[sshd]
-enabled = true
-port = ssh
-filter = sshd
-logpath = /var/log/auth.log
-maxretry = 5
-bantime = 600
-EOF
+#cat > /etc/fail2ban/jail.local << EOF
+#[sshd]
+#enabled = true
+#port = ssh
+#filter = sshd
+#logpath = /var/log/auth.log
+#maxretry = 5
+#bantime = 600
+#EOF
 
-sudo systemctl enable fail2ban
-sudo systemctl start fail2ban
+#systemctl enable fail2ban
+#systemctl start fail2ban
 
 
 # Install Lynis 
